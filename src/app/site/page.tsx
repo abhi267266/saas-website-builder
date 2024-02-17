@@ -1,4 +1,10 @@
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { pricingCards } from "@/lib/constants";
+import clsx from "clsx";
+import { Check } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { features } from "process";
 
 export default function Home() {
   return (
@@ -11,8 +17,42 @@ export default function Home() {
       </div>
       <div className="flex justify-center items-center relative md:mt-[-70px] ">
         <Image src={'/assets/preview.png'} width={1200} height={1200} alt={'banner image'} className="rounded-tl-2xl rounded-tr-2xl border-2 border-muted" />
+      <div className="bottom-0 top-[50%] bg-gradient-to-t dark:from-background left-0 right-0 absolute z-10"></div>
       </div>
-      <div className="bottom-0 top-[50%] bg-gradient-to-t dark:from-background left-0 right-0 absolute"></div>
+      </section>
+
+      <section className="flex justify-center items-center flex-col gap-4 md:!mt-20 mt-[-60px]">
+        <h2 className="text-4xl text-center lg:mt-10">Choose what fits you right</h2>
+        <p className="text-muted-foreground text-center">
+          Our straightforward pricing plans are tailored to meet your needs. if {" you're"} bot <br/> ready to commit you can get started for free.
+        </p>
+        <div className="flex justify-center gap-4 flex-wrap mt-6">
+          {pricingCards.map((card) =>(
+            <Card key={card.title} className={clsx('w-[300px] flex flex-col justify-between', {"border-2 border-primary":card.title === "Unlimited Saas",})}>
+              <CardHeader>
+                <CardTitle className={clsx("", {'text-muted-foregorund': card.title !== "Unlimited Saas"})}>{card.title}</CardTitle>
+                <CardDescription className="">{card.description}</CardDescription>
+              </CardHeader>
+
+              <CardContent className="text-center">
+                <span className="text-4xl font-bold">{card.price}</span>
+                <span className="text-4xl font-bold">/mounth</span>
+              </CardContent>
+
+              <CardFooter className='flex flex-col items-start gap-4'>
+                <div>{card.features.map((feature) => (
+                  <div key={feature} className="flex gap-2 items-center">
+                    <Check className="text-muted-foreground" />
+                    <p>{feature}</p>
+                    </div>
+                ) )}</div>
+
+                <Link href={`/agency?plan=${card.priceId}`} className={clsx('w-full text-center bg-primary p-2 rounded-md', {'!bg-muted-foreground': card.title !== "Unlimited Saas"})}>Get Started</Link>
+              </CardFooter>
+              
+            </Card>
+          ))}
+        </div>
       </section>
     </>
   );
