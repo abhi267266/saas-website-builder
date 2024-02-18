@@ -31,7 +31,7 @@ const Navigation = ({ user }: Props) => {
       </nav>
       <aside className="flex gap-2 items-center">
         <Link
-          className="bg-primary text-white p-4 px-4 rounded-md hover:bg-primary/80"
+          className="bg-primary text-white p-4 px-4 rounded-md hover:bg-primary/80 z-10"
           href={"/agency"}
         >
           Login
