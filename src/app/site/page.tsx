@@ -24,7 +24,7 @@ export default function Home() {
       <section className="flex justify-center items-center flex-col gap-4 md:!mt-20 mt-[-60px]">
         <h2 className="text-4xl text-center lg:mt-10">Choose what fits you right</h2>
         <p className="text-muted-foreground text-center">
-          Our straightforward pricing plans are tailored to meet your needs. if {" you're"} bot <br/> ready to commit you can get started for free.
+          Our straightforward pricing plans are tailored to meet your needs. if {" you're"} not <br/> ready to commit you can get started for free.
         </p>
         <div className="flex justify-center gap-4 flex-wrap mt-6">
           {pricingCards.map((card) =>(
