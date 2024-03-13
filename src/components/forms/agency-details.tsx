@@ -4,7 +4,6 @@ import { NumberInput } from "@tremor/react";
 import React, { useEffect, useState } from "react";
 import { useToast } from "../ui/use-toast";
 import { useRouter } from "next/navigation";
-import { AlertDialog } from "@radix-ui/react-alert-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Card,
@@ -38,7 +37,17 @@ import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
 import { Button } from "../ui/button";
 import Loading from "../global/loading";
-import { AlertDialogTrigger } from "../ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
 
 type Props = {
   data?: Partial<Agency>;
@@ -56,6 +65,12 @@ const FormSchema = z.object({
   country: z.string().min(1),
   agencyLogo: z.string().min(1),
 });
+/**
+ * Renders the Agency Details component.
+ *
+ * @param {Props} data - the props for the component
+ * @return {JSX.Element} the rendered Agency Details component
+ */
 const AgencyDetails = ({ data }: Props) => {
   const { toast } = useToast();
   const router = useRouter();
@@ -85,7 +100,69 @@ const AgencyDetails = ({ data }: Props) => {
     }
   }, [data]);
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async (values: z.infer<typeof FormSchema>) => {
+    try {
+      let newUserData;
+      let customerId;
+      if (!data?.id) {
+        const bodyData = {
+          email: values.companyEmail,
+          name: values.name,
+          shipping: {
+            address: {
+              city: values.city,
+              country: values.country,
+              line1: values.address,
+              postal_code: values.zipCode,
+              state: values.zipCode,
+            },
+            name: values.name,
+          },
+          address: {
+            city: values.city,
+            country: values.country,
+            line1: values.address,
+            postal_code: values.zipCode,
+            state: values.zipCode,
+          },
+        };
+      }
+
+      newUserData = await initUser({ role: "AGENCY_OWNER" });
+      if(!data?.cutomerId){
+        const response = await upsertAgency({
+          
+        })
+      }
+    } catch (error) {}
+  };
+
+  /**
+   * A function to handle the deletion of an agency.
+   *
+   * @return {Promise<void>} A promise that resolves once the agency is deleted
+   */
+  const handleDeleteAgency = async () => {
+    if (!data?.id) return;
+    setDeletingAgency(true);
+    //WIP: discontinue the subscription
+    try {
+      const response = await deleteAgency(data.id);
+      toast({
+        title: "Deleted Agency",
+        description: "Deleted your agency and all subaccounts",
+      });
+      router.refresh();
+    } catch (error) {
+      console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Oppse!",
+        description: "could not delete your agency ",
+      });
+    }
+    setDeletingAgency(false);
+  };
   return (
     <AlertDialog>
       <Card>
@@ -317,6 +394,28 @@ const AgencyDetails = ({ data }: Props) => {
               </AlertDialogTrigger>
             </div>
           )}
+
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-left">
+                Are you absolutely sure?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-left">
+                This action cannot be undone. This will permanently delete the
+                Agency account and all related sub accounts.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex items-center">
+              <AlertDialogCancel className="mb-2">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deletingAgency}
+                className="bg-destructive hover:bg-destructive"
+                onClick={handleDeleteAgency}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
         </CardContent>
       </Card>
     </AlertDialog>
