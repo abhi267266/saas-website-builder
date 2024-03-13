@@ -3,9 +3,14 @@
 import { clerkClient, currentUser } from "@clerk/nextjs";
 import { db } from "./db";
 import { redirect } from "next/navigation";
-import { User } from "@prisma/client";
+import { Agency, Plan, User } from "@prisma/client";
 import { connect } from "http2";
 
+/**
+ * Retrieves the details of the authenticated user.
+ *
+ * @return {Promise<UserDetails>} The user details
+ */
 export const getAuthUserDetails = async () => {
   const user = await currentUser();
 
@@ -35,6 +40,14 @@ export const getAuthUserDetails = async () => {
   return userData;
 };
 
+/**
+ * Save activity logs notification based on agencyId, description, and subaccountId.
+ *
+ * @param {object} param0 - Object containing agencyId, description, and subaccountId.
+ * @param {string} param0.agencyId - The agency ID.
+ * @param {string} param0.description - The description of the notification.
+ * @param {string} param0.subaccountId - The subaccount ID.
+ */
 export const saveActivityLogsNotification = async ({
   agencyId,
   description,
@@ -132,6 +145,13 @@ export const saveActivityLogsNotification = async ({
     }
 };
 
+/**
+ * Creates a team user using the provided agency ID and user information.
+ *
+ * @param {string} agencyId - The ID of the agency the user belongs to.
+ * @param {User} user - The user object containing information to create the team user.
+ * @return {Promise<User>} The response containing the created team user.
+ */
 export const createTeamUser = async (agencyId: string, user: User) => {
   if (user.role === "AGENCY_OWNER") return null;
 
@@ -139,6 +159,11 @@ export const createTeamUser = async (agencyId: string, user: User) => {
   return response;
 };
 
+/**
+ * Verify and accept an invitation for the current user.
+ *
+ * @return {string} The agency ID of the user details if successfully accepted, otherwise null.
+ */
 export const verifyAndAcceptInvitation = async () => {
   const user = await currentUser();
   if (!user) {
@@ -193,3 +218,130 @@ export const verifyAndAcceptInvitation = async () => {
     return agency ? agency.agencyId: null
 }
 };
+
+
+
+/**
+ * Updates the details of an agency in the database.
+ *
+ * @param {string} agencyId - The unique identifier of the agency.
+ * @param {Partial<Agency>} agencyDetails - The partial details of the agency to be updated.
+ * @return {Promise<ReturnType<typeof db.agency.update>>} The response from updating the agency details.
+ */
+export const updateAgencyDetails = async (
+    agencyId: string,
+    agencyDetails: Partial<Agency>
+  ) => {
+    const response = await db.agency.update({
+      where: { id: agencyId },
+      data: { ...agencyDetails },
+    })
+    return response
+  }
+
+
+  /**
+   * A function that deletes an agency.
+   *
+   * @param {string} agencyId - the ID of the agency to delete
+   * @return {Promise} the response from deleting the agency
+   */
+  export const deleteAgency = async (agencyId: string) => {
+    const response = await db.agency.delete({ where: { id: agencyId } })
+    return response
+  }
+  
+  /**
+   * A function that initializes a user with the provided data.
+   *
+   * @param {Partial<User>} newUser - The partial user object containing the data to initialize the user with.
+   * @return {Promise<User>} The user data after initialization.
+   */
+  export const initUser = async (newUser: Partial<User>) => {
+    const user = await currentUser()
+    if (!user) return
+  
+    const userData = await db.user.upsert({
+      where: {
+        email: user.emailAddresses[0].emailAddress,
+      },
+      update: newUser,
+      create: {
+        id: user.id,
+        avatarUrl: user.imageUrl,
+        email: user.emailAddresses[0].emailAddress,
+        name: `${user.firstName} ${user.lastName}`,
+        role: newUser.role || 'SUBACCOUNT_USER',
+      },
+    })
+  
+    await clerkClient.users.updateUserMetadata(user.id, {
+      privateMetadata: {
+        role: newUser.role || 'SUBACCOUNT_USER',
+      },
+    })
+  
+    return userData
+  }
+
+  /**
+   * Upserts an agency with the given details and creates related sidebar options.
+   *
+   * @param {Agency} agency - The agency details to upsert
+   * @param {Plan} [price] - Optional plan details
+   * @return {Promise<Agency>} The upserted agency details
+   */
+  export const upsertAgency = async (agency: Agency, price?: Plan) => {
+    if (!agency.companyEmail) return null
+    try {
+      const agencyDetails = await db.agency.upsert({
+        where: {
+          id: agency.id,
+        },
+        update: agency,
+        create: {
+          users: {
+            connect: { email: agency.companyEmail },
+          },
+          ...agency,
+          SidebarOption: {
+            create: [
+              {
+                name: 'Dashboard',
+                icon: 'category',
+                link: `/agency/${agency.id}`,
+              },
+              {
+                name: 'Launchpad',
+                icon: 'clipboardIcon',
+                link: `/agency/${agency.id}/launchpad`,
+              },
+              {
+                name: 'Billing',
+                icon: 'payment',
+                link: `/agency/${agency.id}/billing`,
+              },
+              {
+                name: 'Settings',
+                icon: 'settings',
+                link: `/agency/${agency.id}/settings`,
+              },
+              {
+                name: 'Sub Accounts',
+                icon: 'person',
+                link: `/agency/${agency.id}/all-subaccounts`,
+              },
+              {
+                name: 'Team',
+                icon: 'shield',
+                link: `/agency/${agency.id}/team`,
+              },
+            ],
+          },
+        },
+      })
+      return agencyDetails
+    } catch (error) {
+      console.log(error)
+    }
+  }
