@@ -25,6 +25,8 @@ import Home from "../../icons/home"
 import Info from "../../icons/info"
 import LinkIcon from "../../icons/link"
 import Message from "../../icons/messages"
+import Lock from "../../icons/lock"
+import Notification from "../../icons/notification"
 
 export const pricingCards = [
     {

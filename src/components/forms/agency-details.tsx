@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { useToast } from "../ui/use-toast";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {v4} from 'uuid';
 import {
   Card,
   CardContent,
@@ -48,6 +49,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
+import { log } from "console";
 
 type Props = {
   data?: Partial<Agency>;
@@ -129,12 +131,40 @@ const AgencyDetails = ({ data }: Props) => {
       }
 
       newUserData = await initUser({ role: "AGENCY_OWNER" });
-      if(!data?.cutomerId){
-        const response = await upsertAgency({
-          
+      if(!data?.id){
+        await upsertAgency({
+          id: data?.id ? data.id : v4(),
+          address: values.address,
+          agencyLogo: values.agencyLogo,
+          city: values.city,
+          companyPhone: values.companyPhone,
+          country: values.country,
+          name: values.name,
+          state: values.state,
+          whiteLabel: values.whiteLabel,
+          zipCode: values.zipCode,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          companyEmail: values.companyEmail,
+          connectAccountId: '',
+          goal: 5,
         })
+
+        toast({
+          title: "Created Agency",
+        });
+
+        return router.refresh();
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Oppse!",
+        description: "could not create your agency ",
+      })
+      
+    }
   };
 
   /**
