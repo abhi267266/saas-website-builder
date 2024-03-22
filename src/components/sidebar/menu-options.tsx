@@ -13,6 +13,7 @@ import { AspectRatio } from "../ui/aspect-ratio";
 import Image from "next/image";
 import clsx from "clsx";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+const {setOpen} = useModal();
 import {
   Command,
   CommandGroup,
@@ -22,6 +23,8 @@ import {
   CommandList,
 } from "../ui/command";
 import Link from "next/link";
+import { useModal } from "@/providers/modal-provider";
+import CustomModal from "../global/custom-modal";
 
 type Props = {
   defaultOpen?: boolean;
@@ -209,7 +212,9 @@ const MenuOptions = ({
                     </CommandGroup>
                 </CommandList>
                 {(user?.role === "AGENCY_OWNER" || user?.role === "AGENCY_ADMIN") && (
-                  <Button className="w-full flex gap-2">
+                  <Button className="w-full flex gap-2" onClick={()=>{
+                      setOpen(<CustomModal title={"Create Sub Account"} subheading={"Enter Sub Account Details"} children={undefined} defaultOpen={false} />)
+                  }}> //Error may be here
                     <PlusCircleIcon size={15}/>
                     Create Sub Accont
                   </Button>
@@ -222,5 +227,6 @@ const MenuOptions = ({
     </Sheet>
   );
 };
+
 
 export default MenuOptions;
